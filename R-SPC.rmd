@@ -1,0 +1,77 @@
+---
+title: "Generating SPC charts with QCC and PostgreSQL"
+author: "Matt Litz"
+date: "2022-10-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(qcc)
+library(RPostgreSQL)
+library(tidyverse)
+library(DBI)
+
+```
+
+## SPC with QCC 3.0
+
+
+
+```{r posgresql_connect}
+
+pw <- "*******"
+drv <- dbDriver("PostgreSQL")
+
+con <- dbConnect(drv, 
+                 dbname = "*******",
+                 host = "localhost", 
+                 port = 5432,
+                 user = "postgres", 
+                 password = pw)
+
+dbExistsTable(con, "*****")
+
+#Changed all METHODs in pg_hba.conf to trust & restart postgres
+#Changed password-encryption in postgresql.conf to md5 & restart postgres
+#Reset password for user postgres (which might have been redundant due to "method/trust") & restart postgres ...and it works.
+
+
+```
+
+
+```{r posgresql_connect}
+# query the data from postgreSQL 
+df <- dbGetQuery(con, "SELECT * FROM")
+
+```
+
+
+
+```{r head_df, echo=FALSE}
+head(df)
+
+```
+
+
+
+
+```{r spc}
+
+q1 <- qcc(df$amount, 
+           type = "xbar.one")
+
+plot(q1)
+
+
+```
+
+
+
+```{r process_capability}
+
+pc = processCapability(q1, spec.limits = c(3,5))
+plot(pc)
+
+```
