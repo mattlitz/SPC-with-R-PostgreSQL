@@ -3,6 +3,8 @@ title: "Generating SPC charts with QCC and PostgreSQL"
 author: "Matt Litz"
 date: "2022-10-29"
 output: html_document
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
@@ -21,17 +23,17 @@ library(DBI)
 
 ```{r posgresql_connect}
 
-pw <- "*******"
+pw <- "at8&6ER8"
 drv <- dbDriver("PostgreSQL")
 
 con <- dbConnect(drv, 
-                 dbname = "*******",
+                 dbname = "dvd_rental",
                  host = "localhost", 
                  port = 5432,
                  user = "postgres", 
                  password = pw)
 
-dbExistsTable(con, "*****")
+dbExistsTable(con, "payment")
 
 #Changed all METHODs in pg_hba.conf to trust & restart postgres
 #Changed password-encryption in postgresql.conf to md5 & restart postgres
@@ -40,10 +42,12 @@ dbExistsTable(con, "*****")
 
 ```
 
+## Query the PostgreSQL database
+
 
 ```{r posgresql_connect}
 # query the data from postgreSQL 
-df <- dbGetQuery(con, "SELECT * FROM")
+df <- dbGetQuery(con, "SELECT * FROM payment WHERE customer_id =341")
 
 ```
 
@@ -61,7 +65,6 @@ head(df)
 
 q1 <- qcc(df$amount, 
            type = "xbar.one")
-
 plot(q1)
 
 
@@ -75,3 +78,74 @@ pc = processCapability(q1, spec.limits = c(3,5))
 plot(pc)
 
 ```
+
+
+```{r shiny_dashboard}
+library(shinydashboard)
+
+ui <- dashboardPage(skin = "black",
+  dashboardHeader(title = "Dept. SPC Charts", titleWidth = 200),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+      menuItem("Charts", tabName = "charts", icon = icon("chart-simple"))
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      tabItem(tabName = "dashboard",
+    # Boxes need to be put in a row (or column)
+    fluidRow(
+      column(width=10,
+      box(plotOutput("plot1", height = 400)),
+      box(tableOutput('table'))
+      
+      ),
+      
+      column(width=10,
+      box(plotOutput("plot2", height = 400))
+      )
+
+    )),
+    
+    
+      tabItem(tabName = "charts",)
+  
+    
+  )
+  )
+)
+
+server <- function(input, output) {
+  set.seed(122)
+
+
+  output$plot1 <- renderPlot({
+    q1 <- qcc(df$amount, 
+           type = "xbar.one")
+    plot(q1)
+  })
+  
+  output$plot2 <- renderPlot({
+    pc = processCapability(q1, spec.limits = c(3,5))
+    plot(pc)
+  })  
+  
+  output$table <- renderTable(df)
+  
+  
+}
+
+shinyApp(ui, server)
+
+#runApp(host = "0.0.0.0", port = 5050)
+
+```
+
+
+
+
+
+
+
+
