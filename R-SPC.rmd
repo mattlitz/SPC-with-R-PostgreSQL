@@ -47,7 +47,7 @@ dbExistsTable(con, "payment")
 
 ```{r posgresql_connect}
 # query the data from postgreSQL 
-df <- dbGetQuery(con, "SELECT * FROM payment WHERE customer_id =341")
+df <- dbGetQuery(con, "SELECT * FROM payment WHERE customer_id =341 OR customer_id =532")
 
 ```
 
@@ -64,11 +64,22 @@ head(df)
 ```{r spc}
 
 q1 <- qcc(df$amount, 
-           type = "xbar.one")
+           type = "xbar.one",
+          limits = c(2.5,7.5))
 plot(q1)
 
 
 ```
+
+
+```{r spc_rules}
+
+df$RuleViol <- qccRules(q1)
+df_rules <- na.omit(df)
+
+
+```
+
 
 
 
@@ -81,6 +92,7 @@ plot(pc)
 
 
 ```{r shiny_dashboard}
+library(shiny)
 library(shinydashboard)
 
 ui <- dashboardPage(skin = "black",
@@ -122,7 +134,8 @@ server <- function(input, output) {
 
   output$plot1 <- renderPlot({
     q1 <- qcc(df$amount, 
-           type = "xbar.one")
+           type = "xbar.one",
+          limits = c(2.5,7.5))
     plot(q1)
   })
   
@@ -131,7 +144,7 @@ server <- function(input, output) {
     plot(pc)
   })  
   
-  output$table <- renderTable(df)
+  output$table <- renderTable(df_rules)
   
   
 }
