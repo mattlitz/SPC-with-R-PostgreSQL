@@ -109,13 +109,15 @@ ui <- dashboardPage(skin = "black",
     # Boxes need to be put in a row (or column)
     fluidRow(
       column(width=10,
-      box(plotOutput("plot1", height = 400)),
-      box(tableOutput('table'))
+      box(plotOutput("plot1", width = NULL,height = 400)),
+      box(plotOutput("plot2", width = NULL,height = 400))
+      
       
       ),
       
       column(width=10,
-      box(plotOutput("plot2", height = 400))
+      box(tableOutput('table'))
+      
       )
 
     )),
